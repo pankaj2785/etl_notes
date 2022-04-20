@@ -1,0 +1,164 @@
+ETL Project 
+
+Documents required :
+1.SRS(System specification Document)
+2.Mapping sheet/PDM - Progressive data mapping
+
+Two Phase of Testing
+1.Test Planning Phase - In this pahse we are creating test cases scenarios and writing test cases.
+2.Test execution phase - In this phase will execute test cases and will log the defect if we found an issue.
+
+
+Release : 
+we have three diffrent sources
+1..txt(order1)
+2..xlsx(order2)
+3.Orcale DB/SQL DB(order3)
+
+The above source for Order application located in diffrent places , need to club and combine and store in single format in DWH.
+
+Test Planning
+
+Phase -1
+Sorce data into Landing area 
+
+Devloper Role :
+Dev teanm has to develop the packages and load the source data into Landing area as per mapping sheet.
+
+Tester Role:
+****************Test Pannning Phase*******************
+1.We have strat test case scenario identification.
+	a.Structure validation
+Source: If source is not in Database , then while performing structure validation we need to refer mapping sheet , 
+	Inside mapping sheet every column name and structure is defined.
+
+Target: SP_HELP Table_Name - it will provide the target(Landing area table) structure
+
+	b.Count validation
+1st Approach: if source is .txt,.csv or.xlsx and target is database then the below process is applicable.
+Source: If source is in .txt or .csv file then will copy that data into excel and will count.
+
+Target: targetis database then will write simple SQL query.
+
+We need to communicate to developer or responsible person who is having source data and ask him to share file or keep it in central repositort or share path.
+`	i.e. select count(*) from Table_Name
+
+
+2nd approach:
+if source and target both are in database then we need to follow below process for validation
+
+source : select Count(*) as sourcecount from Landing.dbo.LND_Order1
+
+Target : select Count(*) as targetcount from Staging.dbo.STG_Order1
+
+
+	c.Duplicate validation
+Whenever we calculate the duplicate validation, we need to validate towards target database.
+
+
+	d.Data validation
+	Q.If we have 1 lakh records in source (.txt.,.csv,.xlsx) then what will be your approach to validate te data against target?
+	
+	Approach: we will apply sample records approach
+		  In this we will take around 5000 records from source with unique ID and same records with unique ID from target
+		  and will create three sheets in excel by name source, target and comapre and will write simple excel formulaes to validate tha data.
+
+If both sorce and target is in database then we can easily validate by using EXCEPT/MINUS function inside the SQL
+but it should have equal number columns and same data types
+Two things we need to check 
+1. source -(except) target =0(balnk records )
+2. target -(except) source =0(balnk records ) 
+
+then validation is correct
+
+
+	e.Column level validation(Transformation rule checks)
+
+2.After scenario identification we are witing the test cases.
+=============================================================
+
+1.First Approach
+Once Pakage is developed by developer then they they will run the package in Test env(SIT), if it is succesful then data gets loaded from source to target.
+it will intimated by circulating an simple email among the test and dev team , once we receive an such email then we resume test execution.
+
+2.Second approach 
+Some time tester has authority to run the package / execute the package , In this we have to add one more test case for package run.
+
+in reality
+80% situvation tester will not get accces /authority to run the package and if the project is critical then tester will not get the access
+
+**********************Test Execution phase******************
+
+
+During the execution once we receive the intimation throgh email the is package execution is successful.
+
+First check is whether the data is loaded in tables or not then will strat basic test execution 
+
+
+select * from STG_Order1
+
+
+--when source is database and target is also database then in that case we can validate the data 
+--by using minus/except function
+
+--source
+select * from ALANDING.dbo.LND_Order1
+
+--target
+select * from ASTAGING.dbo.STG_Order1
+
+
+
+
+--DWH Validation
+--1.Structure validation
+--In this case we will refere mapping sheet as source structure and target is DataBase structure 
+
+--2.Count Validation
+--whenever you are going to calculate count in DWH layer then staging source is impoertant 
+--Inside Staging layer their is column called source in  that it will describe from which source data has been loaded in DWH or target
+--Sorce
+select COUNT(*) from ASTAGING.dbo. STG_order1 
+select COUNT(*) from ASTAGING.dbo.STG_order2
+select COUNT(*) from ASTAGING.dbo.STG_Order3 
+
+--Target
+
+select COUNT(*) from DWH_Order where Source1 ='order1'
+select COUNT(*) from DWH_Order
+--3.Duplicate validation
+--Duplicate query w.r.to target only
+
+--4. Data validation
+--While performing data validation in DWH layer we need to apply all the transformation as per mapping sheet 
+--and we have extract the data.
+
+select * from DWH_Order
+
+--Source data extraction
+select * from ASTAGING.dbo.STG_Order1
+union all
+select * from ASTAGING.dbo.STG_Order2
+union all
+select * from ASTAGING.dbo.STG_Order3
+
+--Target
+select * from DWH_Order
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
